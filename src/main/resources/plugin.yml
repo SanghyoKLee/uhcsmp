@@ -1,0 +1,14 @@
+name: UHCSMP
+version: '${project.version}'
+main: org.kobo.uhcsmp.UHCSMP
+api-version: '1.20'
+authors:
+  - Kobomi
+commands:
+  uhcsmp:
+    description: Teleports all players to the UHC world
+    usage: /uhcsmp start
+    permission: uhcsmp.command.uhcsmpstart
+
+depend:
+  - Multiverse-Core
