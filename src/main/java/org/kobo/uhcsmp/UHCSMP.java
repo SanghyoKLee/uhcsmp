@@ -23,7 +23,8 @@ public final class UHCSMP extends JavaPlugin implements Listener {
 
     private static World latestUhcWorld;
     private boolean uhcWorldExists = false;
-    private static boolean allowRespawnEvents = false;
+    private boolean killingAllPlayers = false;
+    private static boolean resettingWorld = false;
 
     @Override
     public void onEnable() {
@@ -38,8 +39,6 @@ public final class UHCSMP extends JavaPlugin implements Listener {
             checkForExistingWorlds();
             createUhcWorldIfNeeded();
         }, 100);
-
-        allowRespawnEvents = true;
     }
 
     private void checkForExistingWorlds() {
@@ -60,7 +59,7 @@ public final class UHCSMP extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (event.getPlayer().getWorld().getName().equals("world") || !allowRespawnEvents) {
+        if (event.getPlayer().getWorld().getName().equals("world") || resettingWorld) {
             return;
         }
 
@@ -69,6 +68,7 @@ public final class UHCSMP extends JavaPlugin implements Listener {
             return;
         }
 
+        resettingWorld = true;
         announceNewWorldCreation();
         resetWorldAfterDelay();
     }
@@ -109,16 +109,16 @@ public final class UHCSMP extends JavaPlugin implements Listener {
     }
 
     private void announceNewWorldCreation() {
-        Bukkit.getServer().broadcastMessage("Initializing new UHC world...");
+        Bukkit.getServer().broadcastMessage("Initializing new UHC run...");
         Bukkit.getServer().broadcastMessage("You will be teleported momentarily.");
     }
 
     private void resetWorldAfterDelay() {
-        allowRespawnEvents = false;
         Bukkit.getScheduler().runTaskLater(this, () -> {
             deleteWorlds();
             createNewWorldAfterDelay();
-        }, 200L);
+            resettingWorld = false;
+        }, 300L);
     }
 
     private void deleteWorlds() {
@@ -130,7 +130,6 @@ public final class UHCSMP extends JavaPlugin implements Listener {
         executeMultiverseCommand("unload", "world_nether");
         executeMultiverseCommand("delete", "world_nether");
         executeMultiverseCommand("confirm");
-        executeMultiverseCommand("create", " world_nether", "nether");
 
         executeMultiverseCommand("unload", "world_the_end");
         executeMultiverseCommand("delete", "world_the_end");
@@ -151,7 +150,6 @@ public final class UHCSMP extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTaskLater(this, () -> {
             teleportAllPlayersToUhc();
             setScoreboardObjectives();
-            allowRespawnEvents = true;
             executeMultiverseCommand("create", " world_nether", "nether");
             executeMultiverseCommand("create", " world_the_end", "end");
         }, 100L);
@@ -169,11 +167,18 @@ public final class UHCSMP extends JavaPlugin implements Listener {
     }
 
     private void killAllOtherPlayers(Player deadPlayer) {
+        if (killingAllPlayers) {
+            return;
+        }
+        killingAllPlayers = true;
+
         for (Player player : latestUhcWorld.getPlayers()) {
             if (!player.equals(deadPlayer)) {
                 player.setHealth(0);
             }
         }
+
+        killingAllPlayers = false;
     }
 
     private static void setScoreboardObjectives() {
@@ -213,24 +218,14 @@ public final class UHCSMP extends JavaPlugin implements Listener {
     }
 
     public static boolean teleportAllPlayersToUhc() {
-        boolean singlePlayerJoin = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getWorld().getName().equals("world")) {
-                announcePlayerJoin(player, singlePlayerJoin);
                 teleportPlayerToUhc(player, true);
-                singlePlayerJoin = false;
             }
         }
+        Bukkit.getServer().broadcastMessage("GLHF!");
         setScoreboardObjectives();
         return true;
-    }
-
-    private static void announcePlayerJoin(Player player, boolean singlePlayerJoin) {
-        if (singlePlayerJoin) {
-            Bukkit.getServer().broadcastMessage("GLHF " + player.getName() + "!");
-        } else {
-            Bukkit.getServer().broadcastMessage("GLHF!");
-        }
     }
 
     private static void teleportPlayerToUhc(Player player, boolean resetPlayerState) {
@@ -290,8 +285,7 @@ public final class UHCSMP extends JavaPlugin implements Listener {
             return false;
         }
     }
-
-    public static boolean getAllowRespawnEvents() {
-        return allowRespawnEvents;
+    public static boolean getResettingWorld(){
+        return resettingWorld;
     }
 }

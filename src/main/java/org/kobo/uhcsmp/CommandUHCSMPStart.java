@@ -14,7 +14,7 @@ public class CommandUHCSMPStart implements CommandExecutor {
         }
 
         if ("uhcsmp".equals(command.getName()) && args.length > 0 && "start".equals(args[0])) {
-            if (sender instanceof Player && UHCSMP.getAllowRespawnEvents()) {
+            if (sender instanceof Player && !UHCSMP.getResettingWorld()) {
                 if (UHCSMP.teleportAllPlayersToUhc()) {
                     // Message broadcasting is handled within the teleportAllPlayersToUhc method
                 } else {
