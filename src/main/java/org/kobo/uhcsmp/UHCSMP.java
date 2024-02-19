@@ -22,6 +22,7 @@ import java.util.Objects;
 public final class UHCSMP extends JavaPlugin implements Listener {
 
     private static World latestUhcWorld;
+    private static World defaultWorld;
     private boolean uhcWorldExists = false;
     private boolean killingAllPlayers = false;
     private static boolean resettingWorld = false;
@@ -46,6 +47,9 @@ public final class UHCSMP extends JavaPlugin implements Listener {
             if (world.getName().startsWith("uhcWorld")) {
                 latestUhcWorld = world;
                 uhcWorldExists = true;
+            }
+            if (world.getName().equals("world")) {
+                defaultWorld = world;
             }
         }
     }
@@ -80,8 +84,17 @@ public final class UHCSMP extends JavaPlugin implements Listener {
         }
 
         if (event.getPlayer().getWorld().getEnvironment() == World.Environment.NETHER) {
+            Bukkit.broadcastMessage("1");
+            if (Boolean.TRUE.equals(event.getPlayer().getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION))) {
+                Bukkit.broadcastMessage("2");
+                event.getPlayer().getWorld().setGameRule(GameRule.NATURAL_REGENERATION, false);
+            }
+            event.getPlayer().getWorld().setDifficulty(Difficulty.HARD);
             executeMultiverseCommand("modify", "set", "respawnWorld", "world", "world_nether");
         } else if (event.getPlayer().getWorld().getEnvironment() == World.Environment.THE_END) {
+            if (Boolean.TRUE.equals(event.getPlayer().getWorld().getGameRuleValue(GameRule.NATURAL_REGENERATION))) {
+                event.getPlayer().getWorld().setGameRule(GameRule.NATURAL_REGENERATION, false);
+            }
             event.getPlayer().getWorld().setDifficulty(Difficulty.HARD);
             executeMultiverseCommand("modify", "set", "respawnWorld", "world", "world_the_end");
         }
